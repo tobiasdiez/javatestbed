@@ -1,0 +1,85 @@
+plugins {
+    id 'application'
+    id 'org.javamodularity.moduleplugin' version '1.5.0'
+    id 'org.beryx.jlink' version '2.17.0'
+
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    maven { url 'https://oss.sonatype.org/content/groups/public' }
+    maven { url 'https://repository.apache.org/snapshots' }
+}
+
+javafx {
+    version = "13.0.1"
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.web' ]
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:2.0.0-alpha1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-jcl', version: '3.0.0-SNAPSHOT'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j18-impl', version: '3.0.0-SNAPSHOT'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-plugins', version: '3.0.0-SNAPSHOT'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '3.0.0-SNAPSHOT'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '3.0.0-SNAPSHOT'
+    annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '3.0.0-SNAPSHOT'
+}
+
+mainClassName = "$moduleName/org.openjfx.MainApp"
+
+jlink {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        name = 'hellofx'
+    }
+
+    addOptions("--bind-services")
+
+    forceMerge "log4j"
+
+    mergedModule {
+        requires 'java.logging'
+        requires 'jdk.xml.dom'
+        requires 'java.sql'
+        requires 'java.rmi'
+        requires 'java.xml'
+        requires 'java.desktop'
+        requires 'java.security.jgss'
+        requires 'jdk.jsobject'
+        requires 'jdk.unsupported'
+        requires 'java.management'
+        requires 'java.naming'
+        requires 'jdk.unsupported.desktop'
+        requires 'java.security.sasl'
+        requires 'java.scripting'
+        requires 'java.datatransfer'
+        requires 'java.compiler'
+        requires 'java.transaction.xa'
+        requires 'org.slf4j'
+        provides 'org.apache.commons.logging.LogFactory' with 'org.apache.logging.log4j.jcl.LogFactoryImpl'
+        provides 'org.slf4j.spi.SLF4JServiceProvider' with 'org.apache.logging.slf4j.SLF4JServiceProvider'
+    }
+
+    jpackage {
+        // In order for this to work, you need to dowload jpackage from https://jdk.java.net/jpackage/
+        // and put the path to the jdk-14 folder in the environment variable BADASS_JLINK_JPACKAGE_HOME
+        outputDir = "distribution"
+
+        // This requires WiX to be installed: https://github.com/wixtoolset/wix3/releases
+        installerType = "msi"
+        imageOptions = [
+                '--win-console',
+        ]
+        installerOptions = [
+                '--vendor', 'test',
+                '--app-version', "1.0",
+                '--win-upgrade-uuid', 'd636b4ee-6f10-451e-bf57-c89656780e36',
+                '--win-dir-chooser',
+                '--win-shortcut',
+                '--temp', "$buildDir/installer"
+        ]
+    }
+}
